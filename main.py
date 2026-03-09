@@ -7,7 +7,7 @@ from source_code.training import fit, evaluate
 from source_code.evaluation import plot_learning_curves, generate_confusion_matrix, get_classification_metrics, extract_and_save_errors
 
 def run_experiment(model_type, dropout, train_loader, dev_loader, test_loader, vocab, device, test_df, class_names):
-    print(f"\n-Running {model_type} with dropout={dropout}")
+    print(f"\n-Running {model_type.upper()} with dropout={dropout}")
     
     if model_type == "lstm":
         model = LSTMClassifier(
@@ -54,6 +54,9 @@ def run_experiment(model_type, dropout, train_loader, dev_loader, test_loader, v
 
 def main():
     torch.manual_seed(7)
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
     train_df, dev_df, test_df = load_and_split_data(seed=7)
     class_names = ["World", "Sports", "Business", "Sci/Tech"]
