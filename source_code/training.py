@@ -1,3 +1,12 @@
+"""
+In this file, we define how the networks are trained and evaluated.
+Again, essentially all functionality was taken from the Jupyter notebook provided in the practical: lstm_cnn_gclip_yelp.ipynb
+Additionally, we took some ideas from the RNN notebook for implementing early stopping and restoring the best model: rnn_yelp_review_classification.ipynb
+Sources:
+    lstm_cnn_gclip_yelp.ipynb
+    rnn_yelp_review_classification.ipynb
+"""
+
 import time
 import numpy as np
 import torch
@@ -6,6 +15,8 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, f1_score
 
 def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dict:
+    #Evaluate model on given dataset without updating weights
+    #Returning dictionary of metrics
     model.eval()
     all_y = []
     all_pred = []
@@ -35,7 +46,7 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dict
         "loss": total_loss / max(1, n),
         "acc": accuracy_score(y_true, y_pred),
         "f1": f1_score(y_true, y_pred, average="macro"),
-        "y_true": y_true,
+        "y_true": y_true, #Return so evaluation.py can generate confusion matrix.
         "y_pred": y_pred,
     }
 
@@ -49,19 +60,20 @@ def fit(
     max_epochs: int = 20,
     weight_decay: float = 0.0,
     clip_grad_norm: float | None = None,
-    patience: int | None = 3,
+    patience: int | None = 3, #Number of epochs to wait for improvement before stopping
 ) -> list:
     
+    #Main training loop
     loss_fn = nn.CrossEntropyLoss()
-    optim = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optim = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay) #ADAM optimizer
 
-    best_state = None
+    best_state = None #To track early stopping
     best_val = float("inf")
     bad_epochs = 0
 
     hist = []
     for epoch in range(1, max_epochs + 1):
-        model.train()
+        model.train() #put model in training mode
         t0 = time.perf_counter()
 
         total_loss = 0.0
@@ -70,11 +82,11 @@ def fit(
 
         grad_norms = []
 
-        for batch in train_loader:
+        for batch in train_loader: #Move data to GPU
             x = batch.x.to(device)
             lengths = batch.lengths.to(device)
             y = batch.y.to(device)
-
+            
             optim.zero_grad(set_to_none=True)
             logits = model(x, lengths)
             loss = loss_fn(logits, y)
@@ -103,7 +115,7 @@ def fit(
         val = evaluate(model, val_loader, device)
         dt = time.perf_counter() - t0
 
-        record = {
+        record = { #Save metrics for plotting
             "epoch": epoch,
             "train_loss": train_loss,
             "train_acc": train_acc,
@@ -125,6 +137,7 @@ def fit(
             f"time {dt:.1f}s"
         )
 
+        #Early Stopping Logic
         if patience is not None:
             if val["loss"] < best_val - 1e-6:
                 best_val = val["loss"]
@@ -138,6 +151,7 @@ def fit(
                         model.load_state_dict(best_state)
                     break
 
+    #Ensure model ends up with best weights               
     if patience is not None and best_state is not None:
         model.load_state_dict(best_state)
 
