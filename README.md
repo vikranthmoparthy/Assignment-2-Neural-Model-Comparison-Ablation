@@ -19,4 +19,4 @@
     ├── training.py
     └── evaluation.py
 ```
-Command to reproduce results: run "python main.py"
+Command to reproduce results: run "python main.py" (preferably on T4 GPU, Google Collab)
