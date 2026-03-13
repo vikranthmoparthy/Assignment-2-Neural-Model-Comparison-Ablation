@@ -1,7 +1,7 @@
 """
 In this file, we define how the networks are trained and evaluated.
 Again, essentially all functionality was taken from the Jupyter notebook provided in the practical: lstm_cnn_gclip_yelp.ipynb
-Additionally, we took some ideas from the RNN notebook for implementing early stopping and restoring the best model: rnn_yelp_review_classification.ipynb
+Additionally, we took some ideas from the RNN notebook for early stopping and restoring the best model: rnn_yelp_review_classification.ipynb
 Sources:
     lstm_cnn_gclip_yelp.ipynb
     rnn_yelp_review_classification.ipynb
